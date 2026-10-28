@@ -1,0 +1,40 @@
+name: Bloom the contribution garden
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily at 03:17 UTC. GitHub scheduled workflows can be delayed occasionally.
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-garden:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out profile repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate flower garden
+        env:
+          GITHUB_USERNAME: Smyle-Goyal
+          PROFILE_TOKEN: ${{ secrets.PROFILE_TOKEN }}
+        run: python scripts/generate_flowers.py
+
+      - name: Commit updated garden
+        run: |
+          if git diff --quiet -- assets/flower-contributions.svg; then
+            echo "Garden has no changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/flower-contributions.svg
+          git commit -m "🌸 Update contribution flower garden"
+          git push
